@@ -1,10 +1,10 @@
-# Python-generated files
 __pycache__/
-*.py[oc]
-build/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.DS_Store
+game_save.json
 dist/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
+build/
