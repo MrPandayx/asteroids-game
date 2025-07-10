@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asteroids Game - 1000 Levels</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #0f0a23, #1a0d35);
+        color: white;
+        font-family: "Courier New", monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 0 0 10px #4a90e2;
+        background: linear-gradient(45deg, #4a90e2, #7b68ee);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subtitle {
+        text-align: center;
+        font-size: 1.2em;
+        margin-bottom: 20px;
+        opacity: 0.8;
+      }
+
+      .game-container {
+        border: 3px solid #4a90e2;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(74, 144, 226, 0.3);
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+
+      canvas {
+        display: block;
+        background: #0f0a23;
+      }
+
+      .controls {
+        text-align: center;
+        margin: 20px 0;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+      }
+
+      .controls h3 {
+        margin-top: 0;
+        color: #4a90e2;
+      }
+
+      .control-row {
+        margin: 10px 0;
+      }
+
+      .key {
+        background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+        border: 2px solid #4a90e2;
+        border-radius: 5px;
+        padding: 5px 10px;
+        color: white;
+        font-family: "Courier New", monospace;
+        font-weight: bold;
+        display: inline-block;
+        margin: 0 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        opacity: 0.7;
+      }
+
+      .github-link {
+        color: #4a90e2;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+      }
+
+      .github-link:hover {
+        color: #7b68ee;
+        text-shadow: 0 0 5px #7b68ee;
+      }
+
+      .loading {
+        text-align: center;
+        font-size: 1.5em;
+        margin: 20px 0;
+        color: #4a90e2;
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+        max-width: 800px;
+      }
+
+      .feature {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(74, 144, 226, 0.3);
+      }
+
+      .feature h4 {
+        margin-top: 0;
+        color: #4a90e2;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+
+        h1 {
+          font-size: 2em;
+        }
+
+        .game-container {
+          transform: scale(0.8);
+          transform-origin: top center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🚀 Asteroids Game! 🚀</h1>
+    <p class="subtitle">
+      Survive 1000 levels of asteroid mayhem! Earn coins and customize your
+      ship!
+    </p>
+
+    <div class="game-container">
+      <canvas id="canvas" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="loading" id="loading">Loading game... Please wait!</div>
+
+    <div class="controls">
+      <h3>🎮 Game Controls</h3>
+      <div class="control-row">
+        <span class="key">W</span> Move Forward <span class="key">S</span> Move
+        Backward
+      </div>
+      <div class="control-row">
+        <span class="key">A</span> Rotate Left <span class="key">D</span> Rotate
+        Right
+      </div>
+      <div class="control-row"><span class="key">SPACE</span> Shoot</div>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <h4>🎯 Epic Gameplay</h4>
+        <p>
+          Survive through 1000 increasingly difficult levels with faster
+          asteroids and higher spawn rates!
+        </p>
+      </div>
+      <div class="feature">
+        <h4>💰 Coin System</h4>
+        <p>
+          Earn 1 coin per level completed and spend them in the shop on awesome
+          ship skins!
+        </p>
+      </div>
+      <div class="feature">
+        <h4>🎨 Custom Skins</h4>
+        <p>
+          10 unique ship colors including a special rainbow skin with animated
+          effects!
+        </p>
+      </div>
+      <div class="feature">
+        <h4>⚡ Power-ups</h4>
+        <p>
+          Collect McDonald's shake power-ups for rapid-fire shooting abilities!
+        </p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        Made with ❤️ using Pygame |
+        <a
+          href="https://github.com/MrPandayx/"
+          class="github-link"
+          target="_blank"
+          >GitHub: MrPandayx</a
+        >
+      </p>
+      <p>Deploy this game to Cloudflare Pages for free web hosting!</p>
+    </div>
+
+    <script type="application/javascript" src="pygbag.js"></script>
+    <script type="application/javascript">
+      // Initialize the game when pygbag is ready
+      window.addEventListener("load", function () {
+        const loading = document.getElementById("loading");
+        loading.textContent = "Starting game engine...";
+
+        // Hide loading message once game starts
+        setTimeout(() => {
+          loading.style.display = "none";
+        }, 3000);
+      });
+    </script>
+  </body>
+</html>
