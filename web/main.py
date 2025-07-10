@@ -1,8 +1,6 @@
 # Web-compatible version of Asteroids Game
 import pygame
 import asyncio
-import math
-import random
 from constants import *
 from player import Player
 from asteroid import Asteroid
@@ -11,6 +9,11 @@ from shot import Shot
 from shake import Shake
 from shakefield import ShakeField
 from save_system import save_system
+from menu import MainMenu
+from shop import Shop
+# Pre-generate star positions once to avoid reseeding random each frame
+import random
+import math
 
 # Menu states
 MENU_STATE = "MENU"
@@ -48,94 +51,104 @@ def draw_space_background(screen):
     # Fill with a base dark space color
     screen.fill((15, 10, 35))  # Dark purple-blue space color
     
-    # Create a subtle gradient effect
-    for y in range(0, SCREEN_HEIGHT, 10):
-        alpha = int(30 * (1 - y / SCREEN_HEIGHT))
-        if alpha > 0:
-            gradient_color = (15 + alpha, 10 + alpha, 35 + alpha)
-            pygame.draw.rect(screen, gradient_color, (0, y, SCREEN_WIDTH, 10))
-    
-    # Draw stars
+    # Draw pre-generated stars (no random calls) 
     for x, y, brightness, size in STARS:
-        star_color = (brightness, brightness, brightness)
+        color = (brightness, brightness, brightness)
         if size == 1:
-            pygame.draw.circle(screen, star_color, (x, y), 1)
+            screen.set_at((x, y), color)
         else:
-            pygame.draw.circle(screen, star_color, (x, y), 2)
+            pygame.draw.circle(screen, color, (x, y), 1)
     
-    # Draw larger bright stars with twinkling effect
+    # Draw bright stars
     for x, y in BRIGHT_STARS:
-        # Simple twinkling by varying the brightness
-        twinkle = 50 + 50 * math.sin(pygame.time.get_ticks() * 0.01 + x * 0.1)
-        star_color = (200 + twinkle, 200 + twinkle, 255)
-        pygame.draw.circle(screen, star_color, (x, y), 2)
-        # Add a subtle glow
-        pygame.draw.circle(screen, (100, 100, 150), (x, y), 4, 1)
+        pygame.draw.circle(screen, (255, 255, 255), (x, y), 2)
 
 def draw_hearts(screen, lives):
-    heart_size = 20
-    heart_spacing = 30
+    heart_spacing = 40
     start_x = 20
     start_y = 20
+    pixel_size = 2  # Size of each "pixel" in the heart
+    
+    # Define the pixel pattern for a heart (13x11 grid)
+    heart_pattern = [
+        [0,0,1,1,0,0,0,1,1,0,0],
+        [0,1,1,1,1,0,1,1,1,1,0],
+        [1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,1,1,1,1,0],
+        [0,0,1,1,1,1,1,1,1,0,0],
+        [0,0,0,1,1,1,1,1,0,0,0],
+        [0,0,0,0,1,1,1,0,0,0,0],
+        [0,0,0,0,0,1,0,0,0,0,0],
+    ]
     
     for i in range(lives):
         heart_x = start_x + i * heart_spacing
         heart_y = start_y
         
-        # Draw a pixelated heart shape
-        # Heart is made of squares to look retro/pixelated
-        heart_color = (255, 100, 100)  # Red color
-        
-        # Define heart pattern (each 1 represents a filled pixel)
-        heart_pattern = [
-            [0,1,1,0,1,1,0],
-            [1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1],
-            [0,1,1,1,1,1,0],
-            [0,0,1,1,1,0,0],
-            [0,0,0,1,0,0,0]
-        ]
-        
-        # Draw the heart pixel by pixel
-        pixel_size = 3
-        for row_idx, row in enumerate(heart_pattern):
-            for col_idx, pixel in enumerate(row):
-                if pixel == 1:
-                    pixel_x = heart_x + col_idx * pixel_size
-                    pixel_y = heart_y + row_idx * pixel_size
-                    pygame.draw.rect(screen, heart_color, 
-                                   (pixel_x, pixel_y, pixel_size, pixel_size))
+        # Draw each pixel of the heart
+        for row in range(len(heart_pattern)):
+            for col in range(len(heart_pattern[row])):
+                if heart_pattern[row][col] == 1:
+                    pixel_x = heart_x + col * pixel_size
+                    pixel_y = heart_y + row * pixel_size
+                    pygame.draw.rect(screen, "red", (pixel_x, pixel_y, pixel_size, pixel_size))
 
-def draw_timer(screen, time, level, asteroids_killed):
-    font = pygame.font.Font(None, 36)
+def draw_timer(screen, game_time, current_level, asteroids_killed):
+    # Convert game_time (in seconds) to minutes:seconds:milliseconds format
+    minutes = int(game_time // 60)
+    seconds = int(game_time % 60)
+    milliseconds = int((game_time % 1) * 100)
     
-    # Format time as MM:SS:MS
-    minutes = int(time // 60)
-    seconds = int(time % 60)
-    milliseconds = int((time % 1) * 100)
+    # Format the time string
     time_str = f"{minutes:02d}:{seconds:02d}:{milliseconds:02d}"
     
-    time_text = f"Time: {time_str}"
-    time_surface = font.render(time_text, True, (255, 255, 255))
-    screen.blit(time_surface, (20, 80))
+    # Calculate asteroids needed for next level
+    if current_level < MAX_LEVEL:
+        asteroids_needed_for_next = get_asteroids_needed_for_level(current_level + 1)
+        asteroids_remaining = asteroids_needed_for_next - asteroids_killed
+        progress_str = f"Next: {asteroids_remaining} kills"
+    else:
+        progress_str = "MAX LEVEL!"
     
-    # Show progress to next level
-    asteroids_needed = get_asteroids_needed_for_level(level + 1)
-    progress_text = f"Next Level: {asteroids_killed}/{asteroids_needed} kills"
-    progress_surface = font.render(progress_text, True, (255, 255, 255))
-    screen.blit(progress_surface, (20, 120))
+    # Create fonts
+    time_font = pygame.font.Font(None, 36)
+    progress_font = pygame.font.Font(None, 28)
+    
+    # Render text surfaces
+    time_surface = time_font.render(time_str, True, (255, 255, 255))
+    progress_surface = progress_font.render(progress_str, True, (200, 200, 255))
+    
+    # Position in top-right corner
+    time_rect = time_surface.get_rect()
+    time_rect.topright = (SCREEN_WIDTH - 20, 20)
+    
+    progress_rect = progress_surface.get_rect()
+    progress_rect.topright = (SCREEN_WIDTH - 20, 55)
+    
+    screen.blit(time_surface, time_rect)
+    screen.blit(progress_surface, progress_rect)
 
 def draw_level(screen, level):
+    # Create font for the level display
     font = pygame.font.Font(None, 48)
-    level_text = f"Level: {level}"
-    level_surface = font.render(level_text, True, (255, 255, 255))
-    screen.blit(level_surface, (SCREEN_WIDTH - 200, 20))
+    level_text = f"Level {level}"
+    text_surface = font.render(level_text, True, (255, 255, 255))
+    
+    # Position in top-center of screen
+    text_rect = text_surface.get_rect()
+    text_rect.centerx = SCREEN_WIDTH // 2
+    text_rect.top = 20
+    
+    screen.blit(text_surface, text_rect)
 
+# Button class for menu interface
 class Button:
-    def __init__(self, x, y, width, height, text):
+    def __init__(self, x, y, width, height, text, font_size=36):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
-        self.font = pygame.font.Font(None, 36)
+        self.font = pygame.font.Font(None, font_size)
         self.is_hovered = False
         
     def draw(self, screen):
@@ -163,6 +176,84 @@ class Button:
             if event.button == 1 and self.rect.collidepoint(event.pos):  # Left click
                 return True
         return False
+
+def draw_menu(screen, buttons):
+    # Draw space background
+    draw_space_background(screen)
+    
+    # Draw coin display
+    draw_coins(screen, save_system.get_coins())
+    
+    # Draw game title
+    title_font = pygame.font.Font(None, 72)
+    title_text = "Asteroids Game!"
+    title_surface = title_font.render(title_text, True, (255, 255, 255))
+    title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 150))
+    screen.blit(title_surface, title_rect)
+    
+    # Draw subtitle
+    subtitle_font = pygame.font.Font(None, 24)
+    subtitle_text = "Survive 1000 levels of asteroid mayhem!"
+    subtitle_surface = subtitle_font.render(subtitle_text, True, (200, 200, 255))
+    subtitle_rect = subtitle_surface.get_rect(center=(SCREEN_WIDTH // 2, 200))
+    screen.blit(subtitle_surface, subtitle_rect)
+    
+    # Draw buttons
+    for button in buttons:
+        button.draw(screen)
+    
+    # Draw GitHub link at bottom center (clickable)
+    link_font = pygame.font.Font(None, 20)
+    link_text = "https://github.com/MrPandayx/"
+    link_surface = link_font.render(link_text, True, (150, 150, 255))
+    link_rect = link_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 30))
+    screen.blit(link_surface, link_rect)
+    
+    # Return the link rect for click detection
+    return link_rect
+
+def draw_game_over_screen(screen, level, time, buttons, coins_earned=0):
+    # Draw space background
+    draw_space_background(screen)
+    
+    # Draw coin display
+    draw_coins(screen, save_system.get_coins())
+    
+    # Draw game over title
+    title_font = pygame.font.Font(None, 72)
+    title_text = "GAME OVER"
+    title_surface = title_font.render(title_text, True, (255, 100, 100))
+    title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 150))
+    screen.blit(title_surface, title_rect)
+    
+    # Draw stats
+    stats_font = pygame.font.Font(None, 36)
+    
+    # Format time
+    minutes = int(time // 60)
+    seconds = int(time % 60)
+    milliseconds = int((time % 1) * 100)
+    time_str = f"{minutes:02d}:{seconds:02d}:{milliseconds:02d}"
+    
+    level_text = f"Level Reached: {level}"
+    time_text = f"Survival Time: {time_str}"
+    coins_text = f"Coins Earned: {coins_earned}"
+    
+    level_surface = stats_font.render(level_text, True, (255, 255, 255))
+    time_surface = stats_font.render(time_text, True, (255, 255, 255))
+    coins_surface = stats_font.render(coins_text, True, (255, 215, 0))
+    
+    level_rect = level_surface.get_rect(center=(SCREEN_WIDTH // 2, 220))
+    time_rect = time_surface.get_rect(center=(SCREEN_WIDTH // 2, 260))
+    coins_rect = coins_surface.get_rect(center=(SCREEN_WIDTH // 2, 300))
+    
+    screen.blit(level_surface, level_rect)
+    screen.blit(time_surface, time_rect)
+    screen.blit(coins_surface, coins_rect)
+    
+    # Draw buttons
+    for button in buttons:
+        button.draw(screen)
 
 def draw_coins(screen, coins):
     """Draw coin display in bottom right corner"""
@@ -297,92 +388,37 @@ def draw_shop(screen, buttons, shop_items, scroll_offset=0):
     for button in buttons:
         button.draw(screen)
 
-def draw_menu(screen, buttons):
-    # Draw space background
-    draw_space_background(screen)
+class ShopItem:
+    def __init__(self, x, y, width, height, skin_id, skin_data):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.skin_id = skin_id
+        self.skin_data = skin_data
+        self.is_owned = skin_id in save_system.get_owned_skins()
+        self.is_current = skin_id == save_system.get_current_skin()
     
-    # Draw coin display
-    draw_coins(screen, save_system.get_coins())
-    
-    # Draw game title
-    title_font = pygame.font.Font(None, 72)
-    title_text = "Asteroids Game!"
-    title_surface = title_font.render(title_text, True, (255, 255, 255))
-    title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 150))
-    screen.blit(title_surface, title_rect)
-    
-    # Draw subtitle
-    subtitle_font = pygame.font.Font(None, 24)
-    subtitle_text = "Survive 1000 levels of asteroid mayhem!"
-    subtitle_surface = subtitle_font.render(subtitle_text, True, (200, 200, 255))
-    subtitle_rect = subtitle_surface.get_rect(center=(SCREEN_WIDTH // 2, 200))
-    screen.blit(subtitle_surface, subtitle_rect)
-    
-    # Draw buttons
-    for button in buttons:
-        button.draw(screen)
-    
-    # Draw GitHub link at bottom center (clickable)
-    link_font = pygame.font.Font(None, 20)
-    link_text = "https://github.com/MrPandayx/"
-    link_surface = link_font.render(link_text, True, (150, 150, 255))
-    link_rect = link_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 30))
-    screen.blit(link_surface, link_rect)
-    
-    # Return the link rect for click detection
-    return link_rect
-
-def draw_game_over_screen(screen, level, time, buttons, coins_earned=0):
-    # Draw space background
-    draw_space_background(screen)
-    
-    # Draw coin display
-    draw_coins(screen, save_system.get_coins())
-    
-    # Draw game over title
-    title_font = pygame.font.Font(None, 72)
-    title_text = "GAME OVER"
-    title_surface = title_font.render(title_text, True, (255, 100, 100))
-    title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 150))
-    screen.blit(title_surface, title_rect)
-    
-    # Draw stats
-    stats_font = pygame.font.Font(None, 36)
-    
-    # Format time
-    minutes = int(time // 60)
-    seconds = int(time % 60)
-    milliseconds = int((time % 1) * 100)
-    time_str = f"{minutes:02d}:{seconds:02d}:{milliseconds:02d}"
-    
-    level_text = f"Level Reached: {level}"
-    time_text = f"Survival Time: {time_str}"
-    coins_text = f"Coins Earned: {coins_earned}"
-    
-    level_surface = stats_font.render(level_text, True, (255, 255, 255))
-    time_surface = stats_font.render(time_text, True, (255, 255, 255))
-    coins_surface = stats_font.render(coins_text, True, (255, 215, 0))
-    
-    level_rect = level_surface.get_rect(center=(SCREEN_WIDTH // 2, 220))
-    time_rect = time_surface.get_rect(center=(SCREEN_WIDTH // 2, 260))
-    coins_rect = coins_surface.get_rect(center=(SCREEN_WIDTH // 2, 300))
-    
-    screen.blit(level_surface, level_rect)
-    screen.blit(time_surface, time_rect)
-    screen.blit(coins_surface, coins_rect)
-    
-    # Draw buttons
-    for button in buttons:
-        button.draw(screen)
+    def handle_click(self):
+        """Handle clicking on this shop item"""
+        if self.is_current:
+            return False  # Already equipped
+        elif self.is_owned:
+            # Equip this skin
+            save_system.set_current_skin(self.skin_id)
+            return True
+        else:
+            # Try to buy this skin
+            if save_system.buy_skin(self.skin_id):
+                save_system.set_current_skin(self.skin_id)
+                return True
+            return False  # Not enough coins
 
 async def main():
     pygame.init()
-    print("Starting Asteroids Game for Web!")
+    print("Starting Asteroids!")
     print(f"Screen width: {SCREEN_WIDTH}")
     print(f"Screen height: {SCREEN_HEIGHT}")
     
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Asteroids Game - 1000 Levels")
+    pygame.display.set_caption("Asteroids - 1000 Levels")
     clock = pygame.time.Clock()
     
     # Game state
@@ -428,20 +464,19 @@ async def main():
     asteroid_field = None
     shake_field = None
     
-    running = True
-    while running:
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
-                break
+                return
             
             # Handle menu events
             if current_state == MENU_STATE:
                 # Handle GitHub link clicks
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if github_link_rect and github_link_rect.collidepoint(event.pos):
-                        print("GitHub link clicked - would open in web version")
-                        # In web version, this would open the link
+                        print("Opening GitHub link...")
+                        # GitHub link disabled for web version
+                        pass
                 
                 for button in menu_buttons:
                     if button.handle_event(event):
@@ -485,7 +520,7 @@ async def main():
                             current_state = SHOP_STATE
                             
                         elif button == quit_button:
-                            running = False
+                            return
             
             # Handle shop events
             elif current_state == SHOP_STATE:
