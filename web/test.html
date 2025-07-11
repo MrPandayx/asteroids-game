@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Asteroids Game Test</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>🚀 Asteroids Game! 🚀</h1>
+    <p>Survive 1000 levels of asteroid mayhem! Earn coins and customize your ship!</p>
+    <div id="pygame-container">
+        <canvas id="pygame-canvas" width="1280" height="720"></canvas>
+    </div>
+    <script>
+        console.log("Testing if page loads...");
+        // Simple test to see if JavaScript is working
+        document.body.style.background = 'linear-gradient(135deg, #0f0a23, #1a0d35)';
+        document.body.style.color = 'white';
+        document.body.style.fontFamily = 'Arial, sans-serif';
+        document.body.style.textAlign = 'center';
+        document.body.style.padding = '20px';
+        
+        // Create simple game simulation
+        const canvas = document.getElementById('pygame-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Draw space background
+        ctx.fillStyle = 'rgb(15, 10, 35)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw some stars
+        ctx.fillStyle = 'white';
+        for (let i = 0; i < 100; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            ctx.fillRect(x, y, 1, 1);
+        }
+        
+        // Draw title
+        ctx.fillStyle = 'white';
+        ctx.font = '48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Asteroids Game!', canvas.width/2, 150);
+        
+        // Draw subtitle
+        ctx.font = '24px Arial';
+        ctx.fillStyle = 'rgb(200, 200, 255)';
+        ctx.fillText('Survive 1000 levels of asteroid mayhem!', canvas.width/2, 200);
+        
+        // Draw buttons
+        function drawButton(x, y, width, height, text) {
+            ctx.fillStyle = 'rgb(50, 50, 150)';
+            ctx.fillRect(x, y, width, height);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, width, height);
+            
+            ctx.fillStyle = 'rgb(200, 200, 200)';
+            ctx.font = '36px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, x + width/2, y + height/2 + 12);
+        }
+        
+        // Draw menu buttons
+        const buttonWidth = 200;
+        const buttonHeight = 60;
+        const buttonX = canvas.width/2 - buttonWidth/2;
+        
+        drawButton(buttonX, 280, buttonWidth, buttonHeight, 'PLAY');
+        drawButton(buttonX, 360, buttonWidth, buttonHeight, 'SHOP');
+        drawButton(buttonX, 440, buttonWidth, buttonHeight, 'QUIT');
+        
+        // Draw coin display
+        ctx.fillStyle = 'rgb(255, 215, 0)';
+        ctx.beginPath();
+        ctx.arc(canvas.width - 120, canvas.height - 40, 15, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        ctx.fillStyle = 'white';
+        ctx.font = '36px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('0', canvas.width - 95, canvas.height - 25);
+        
+        console.log("Simple canvas version rendered successfully!");
+    </script>
+</body>
+</html>
