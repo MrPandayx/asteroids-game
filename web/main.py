@@ -410,27 +410,42 @@ class ShopItem:
             return False  # Not enough coins
 
 async def main():
+    print("Initializing pygame...")
     pygame.init()
+    print("Pygame initialized successfully!")
     print("Starting Asteroids!")
     print(f"Screen width: {SCREEN_WIDTH}")
     print(f"Screen height: {SCREEN_HEIGHT}")
     
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Asteroids - 1000 Levels")
+    try:
+        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Asteroids - 1000 Levels")
+        print("Display initialized successfully!")
+    except Exception as e:
+        print(f"Error initializing display: {e}")
+        return
+        
     clock = pygame.time.Clock()
     
     # Game state
     current_state = MENU_STATE
+    print(f"Initial game state: {current_state}")
     
     # Create menu buttons
     button_width = 200
     button_height = 60
     button_x = SCREEN_WIDTH // 2 - button_width // 2
+    print(f"Creating buttons at x={button_x}")
     
-    play_button = Button(button_x, 280, button_width, button_height, "PLAY")
-    shop_button = Button(button_x, 360, button_width, button_height, "SHOP") 
-    quit_button = Button(button_x, 440, button_width, button_height, "QUIT")
-    menu_buttons = [play_button, shop_button, quit_button]
+    try:
+        play_button = Button(button_x, 280, button_width, button_height, "PLAY")
+        shop_button = Button(button_x, 360, button_width, button_height, "SHOP") 
+        quit_button = Button(button_x, 440, button_width, button_height, "QUIT")
+        menu_buttons = [play_button, shop_button, quit_button]
+        print(f"Created {len(menu_buttons)} menu buttons successfully!")
+    except Exception as e:
+        print(f"Error creating buttons: {e}")
+        return
     
     # Create shop buttons
     back_button = Button(50, SCREEN_HEIGHT - 80, 120, 50, "BACK")
@@ -462,7 +477,13 @@ async def main():
     asteroid_field = None
     shake_field = None
     
+    print("Starting main game loop...")
+    frame_count = 0
     while True:
+        frame_count += 1
+        if frame_count % 60 == 0:  # Log every second
+            print(f"Game running... Frame {frame_count}, State: {current_state}")
+            
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
