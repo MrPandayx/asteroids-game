@@ -1,7 +1,7 @@
 import json
 from constants import STARTING_COINS
 
-# Web version uses in-memory storage only
+# Web version uses localStorage simulation
 class SaveSystem:
     def __init__(self):
         # For web version, start with default data (no file I/O)
@@ -17,9 +17,6 @@ class SaveSystem:
         }
     
     def load_data(self):
-        """Load save data - web version returns default"""
-        return self.get_default_data()
-    
     def save_data(self):
         """Save current data - web version does nothing"""
         pass  # No file I/O in web version
