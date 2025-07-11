@@ -46,20 +46,11 @@ LEVEL_UP_TIME = 10.0  # seconds per level (backup system)
 BASE_ASTEROID_SPAWN_RATE = 1.5  # slowest spawn rate (level 1)
 MIN_ASTEROID_SPAWN_RATE = 0.05  # fastest spawn rate (level 1000) - even faster for extreme levels
 BASE_ASTEROID_SPEED_MIN = 20     # slowest speed range (level 1)
-BASE_ASTEROID_SPEED_MAX = 50     # slowest speed range (level 1)
-MAX_ASTEROID_SPEED_MIN = 100     # fastest speed range (level 1000)
-MAX_ASTEROID_SPEED_MAX = 200     # fastest speed range (level 1000)
+BASE_ASTEROID_SPEED_MAX = 40
+MAX_ASTEROID_SPEED_MIN = 100     # fastest speed range (level 100)
+MAX_ASTEROID_SPEED_MAX = 200
 
+# Kill-based level up system
 def get_asteroids_needed_for_level(level):
-    """Calculate how many asteroids need to be destroyed to reach a given level"""
-    # Level 1 starts with 0 kills needed
-    # Level 2 needs 2 kills, Level 3 needs 3 kills, etc.
-    return level
-
-def get_level_from_kills(kills):
-    """Calculate what level the player should be at based on kills"""
-    # Start at level 1, advance when kills >= level number
-    level = 1
-    while level <= MAX_LEVEL and kills >= level:
-        level += 1
-    return level - 1  # Return the last completed level
+    """Calculate how many asteroids need to be destroyed to reach the given level"""
+    return level * 2  # Level 2 needs 2 kills, Level 3 needs 4 total, etc.

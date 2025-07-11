@@ -52,14 +52,30 @@ class Shop:
         self.hovered_back = False
     
     def load_shop_data(self):
-        """Load shop data from session storage for web version"""
-        # For web version, we'll use simple defaults since file I/O is limited
-        pass
+        """Load shop data from file"""
+        try:
+            if os.path.exists("shop_data.json"):
+                with open("shop_data.json", "r") as f:
+                    data = json.load(f)
+                    # Update owned status
+                    for i, skin_data in enumerate(data.get("skins", [])):
+                        if i < len(self.skins):
+                            self.skins[i]["owned"] = skin_data.get("owned", False)
+                    self.selected_skin = data.get("selected_skin", 0)
+        except:
+            pass  # Use default values if file doesn't exist or is corrupted
     
     def save_shop_data(self):
-        """Save shop data for web version"""
-        # For web version, we'll use simple session storage
-        pass
+        """Save shop data to file"""
+        try:
+            data = {
+                "skins": [{"owned": skin["owned"]} for skin in self.skins],
+                "selected_skin": self.selected_skin
+            }
+            with open("shop_data.json", "w") as f:
+                json.dump(data, f)
+        except:
+            pass  # Fail silently if can't save
     
     def handle_event(self, event, coins):
         if event.type == pygame.MOUSEMOTION:

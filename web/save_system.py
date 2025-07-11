@@ -1,43 +1,47 @@
-# Web-compatible save system using localStorage via browser
+import json
+import os
+from constants import STARTING_COINS
+
+SAVE_FILE = "game_save.json"
+
 class SaveSystem:
     def __init__(self):
         self.data = self.load_data()
     
     def load_data(self):
-        """Load save data from browser localStorage, create default if not exists"""
-        try:
-            # For web version, we'll use a simple in-memory storage
-            # In a real web deployment, you'd use localStorage
-            return {
-                "coins": 0,
-                "owned_skins": ["white"],  # Default skin is always owned
-                "current_skin": "white"
-            }
-        except:
-            pass
+        """Load save data from file, create default if not exists"""
+        if os.path.exists(SAVE_FILE):
+            try:
+                with open(SAVE_FILE, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError):
+                pass
         
         # Default save data
         return {
-            "coins": 0,
+            "coins": STARTING_COINS,
             "owned_skins": ["white"],  # Default skin is always owned
             "current_skin": "white"
         }
     
     def save_data(self):
-        """Save current data - for web version this is just in memory"""
-        # In a real web version, you'd save to localStorage here
-        pass
+        """Save current data to file"""
+        try:
+            with open(SAVE_FILE, 'w') as f:
+                json.dump(self.data, f, indent=2)
+        except IOError:
+            print("Failed to save game data")
     
     def get_coins(self):
-        return self.data.get("coins", 0)
+        return self.data.get("coins", STARTING_COINS)
     
     def add_coins(self, amount):
-        self.data["coins"] = self.data.get("coins", 0) + amount
+        self.data["coins"] = self.data.get("coins", STARTING_COINS) + amount
         self.save_data()
     
     def spend_coins(self, amount):
         """Returns True if successful, False if not enough coins"""
-        current_coins = self.data.get("coins", 0)
+        current_coins = self.data.get("coins", STARTING_COINS)
         if current_coins >= amount:
             self.data["coins"] = current_coins - amount
             self.save_data()

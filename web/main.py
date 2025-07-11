@@ -695,7 +695,7 @@ async def main():
         
         pygame.display.flip()
         dt = clock.tick(60) / 1000
-        await asyncio.sleep(0)  # Allow other tasks to run
+        await asyncio.sleep(0)
 
 if __name__ == "__main__":
     asyncio.run(main())
